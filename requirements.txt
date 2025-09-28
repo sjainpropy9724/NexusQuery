@@ -1,0 +1,25 @@
+langchain
+langchain-community
+faiss-cpu
+numpy
+pandas
+rank_bm25
+sentence-transformers
+pypdf
+python-docx
+pillow
+pytesseract
+requests
+beautifulsoup4
+fastapi
+python-multipart
+pydantic
+streamlit
+python-dotenv
+openai
+google-generativeai
+celery[redis]
+redis
+--extra-index-url https://download.pytorch.org/whl/cu129
+torch==2.8.0+cu129
+torchvision==0.23.0+cu129
