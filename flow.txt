@@ -1,0 +1,88 @@
+You got it. This is the final step in wiring up the agent.
+
+We need to go back to app/agent.py and replace the final graph assembly block with our new logic.
+
+### Step 4: Assemble the Final Graph
+Find the code at the very bottom of app/agent.py (it starts with workflow = StateGraph(AgentState)).
+
+Replace that entire final block with this new version, which includes the query_graph node and the new conditional path.
+
+Python
+
+# --- 7. Assemble the Graph ---
+
+print("--- AGENT: Compiling Graph ---")
+
+# Initialize a new graph
+workflow = StateGraph(AgentState)
+
+# Add the nodes
+# These are all the "tools" and "steps" our agent can take
+workflow.add_node("retrieve_context", retrieve_context_node)
+workflow.add_node("generate_answer", generate_answer_node)
+workflow.add_node("rephrase_query", rephrase_query_node)
+workflow.add_node("query_graph", query_graph_node)  # <-- ADDED NEW NODE
+
+# Set the entry point
+# This is the first node to be called
+workflow.set_entry_point("retrieve_context")
+
+# Add the edges
+# These are the "arrows" connecting the nodes
+
+# 1. The primary path: retrieve -> generate
+workflow.add_edge("retrieve_context", "generate_answer")
+
+# 2. The first loop: rephrase -> retrieve
+workflow.add_edge("rephrase_query", "retrieve_context")
+
+# 3. The new loop: query_graph -> generate
+workflow.add_edge("query_graph", "generate_answer")
+
+# 4. Add our conditional "brain"
+# This router checks the answer and decides which path to take
+workflow.add_conditional_edges(
+    "generate_answer",  # The node we're branching from
+    decide_next_step_router, # The function that makes the decision
+    {
+        # IF router returns "rephrase", go to "rephrase_query" node
+        "rephrase": "rephrase_query",
+        
+        # IF router returns "query_graph", go to "query_graph" node
+        "query_graph": "query_graph", # <-- ADDED NEW PATH
+        
+        # IF router returns "end", stop the graph
+        "end": END
+    }
+)
+
+# Compile the graph into a runnable app
+app = workflow.compile()
+
+print("--- AGENT: Graph Compiled Successfully ---")
+## You're Done!
+Your agent is now a true multi-tool agent.
+
+Here's the new logic flow:
+
+Start: The agent first tries retrieve_context (vector search).
+
+It sends the context to generate_answer.
+
+Check: The decide_next_step_router checks the answer.
+
+If good: The agent finishes (END).
+
+If "not found" (Try 1): The router returns "query_graph".
+
+Loop 1: The agent runs query_graph_node. The graph context is sent back to generate_answer.
+
+Check 2: The router checks the new answer.
+
+If good: The agent finishes (END).
+
+If "not found" (Try 2): The router returns "rephrase".
+
+Loop 2: The agent runs rephrase_query_node. The new query is sent back to retrieve_context.
+
+...and so on, until it finds an answer or hits MAX_RETRIES.

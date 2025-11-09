@@ -1,0 +1,16 @@
+1. Start Docker Desktop, start the engine and resume the nexus-redis container
+2. Open 3 anaconda terminals
+3. In all the terminals, navigate to D:/Swarit/Coding/NexusQuery
+4. Type the below 3 command sets in 3 different terminals
+    Terminal 1: 
+        conda activate ./venv
+        celery -A app.celery_worker worker --loglevel=info --pool=solo
+    
+    Terminal 2:
+        conda activate ./venv
+        uvicorn app.main:app --reload
+    
+    Terminal 3:
+        conda activate ./venv
+        cd app
+        python -m streamlit run ui.py
